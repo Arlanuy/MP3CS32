@@ -5,6 +5,28 @@
 #define FALSE 0
 #define TRUE 1
 
+typedef struct Node Node;
+
+struct Node
+{
+    int VRTX;
+    char TYPE;
+    Node *NEXT;
+};
+
+typedef struct {
+    Node** node_list;
+}LIST;
+
+typedef struct{
+    LIST list;
+    int* pred;
+    int* d;
+    int* f;
+}GRAPH; 
+
+
+
 char* printMenuWithDataIter(char* menu_choice, int menuchoice_size) {
     printf("How would you like your input to be further processed?\n");
     printf("Enter 0 to process the next dataset\n");
@@ -23,7 +45,7 @@ int getNumOfVertex(char* cost_row) {
             vertex_num++;
         }
     }
-    printf("vertex num is %d\n", vertex_num);
+    //printf("vertex num is %d\n", vertex_num);
     return vertex_num;
 }
 
@@ -79,6 +101,12 @@ int main(void) {
     int** cost_adj_mat = NULL;
     char** str_cost_adj_mat = NULL;
     int num_of_vertex;//, str_cost_alloc_iter, cost_alloc_iter;
+    
+    //for the graph
+    GRAPH graph;
+    LIST list;
+    int vertex_create_iter, array_filler_iter;
+    
     while (more_dataset == TRUE) {
         menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
         switch(menu_choice[0] - '0') {
@@ -93,14 +121,14 @@ int main(void) {
                     space_iter = 0;
                     start_line_iter = 0;
                     //cost_adj_mat = realloc(cost_adj_mat, (row_iter + 1) * sizeof(int*));
-                    printf("string line is %s\n", line);
+                    //printf("string line is %s\n", line);
                     line_bounds = strlen(line);
                     for (line_iter = 0; line_iter < line_bounds; line_iter++) {
                         if (line[line_iter] == ' ' || line[line_iter] == '\n') {
                             line[line_iter] = '\0';
                             cost_adj_mat[row_iter] = realloc(cost_adj_mat[row_iter], (space_iter + 1) * sizeof(int));
                             cost_adj_mat[row_iter][space_iter] = atoi(&line[start_line_iter]);
-                            printf("string is %s at i %d and j %d is %d\n", &line[start_line_iter], row_iter, space_iter, cost_adj_mat[row_iter][space_iter]);
+                            //printf("string is %s at i %d and j %d is %d\n", &line[start_line_iter], row_iter, space_iter, cost_adj_mat[row_iter][space_iter]);
                             space_iter++;
                             start_line_iter = line_iter + 1;
                         }
@@ -110,6 +138,26 @@ int main(void) {
                     str_cost_adj_mat[row_iter] = line;
                     row_iter++;  
                 }
+                //constructing the graph
+                 list.node_list = malloc(sizeof(Node*) * sizeof(num_of_vertex));
+                 for (vertex_create_iter = 1; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
+                    Node* node = malloc(sizeof(Node));
+                    node->VRTX = vertex_create_iter;
+                    node->NEXT = NULL;
+                    printf("vertex %d created\t", node->VRTX);
+                    list.node_list[vertex_create_iter - 1] = node;
+                 }
+                 
+
+                 graph.list = list;
+                 graph.pred = malloc(sizeof(int) * num_of_vertex);
+                 graph.d = malloc(sizeof(int) * num_of_vertex);
+                 graph.f = malloc(sizeof(int) * num_of_vertex);
+                 
+                 for(array_filler_iter = 0; array_filler_iter < num_of_vertex; array_filler_iter++) {
+                    graph.pred[array_filler_iter] = 0;
+                    printf("at %d init to 0\t", array_filler_iter);
+                 }
                 
             case 1:
                 printf("Enter a vertex pair (separate it by space): ");          
@@ -144,6 +192,19 @@ int main(void) {
             more_dataset = FALSE;
         }
      }
+     
+     
+     
+     //freeing all the pointers used in constructing the graph
+     for (vertex_create_iter = 1; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
+        free(list.node_list[vertex_create_iter - 1]);
+     }
+     free(list.node_list);
+     free(graph.pred);
+     free(graph.d);
+     free(graph.f);
+             
+     //freeing all the other used pointers
      freeStrCostAdjMat(str_cost_adj_mat, num_of_vertex);
      free(str_cost_adj_mat);
      freeCostAdjMat(cost_adj_mat, num_of_vertex);
