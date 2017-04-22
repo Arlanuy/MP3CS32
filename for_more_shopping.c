@@ -64,6 +64,8 @@ void freeCostAdjMat(int** cost_adj_mat, int num_of_vertex) {
     
 }
 
+
+
 int main(void) {
      int filename_size = 50, line_size = 500, string_size = 70, menuchoice_size = 10;
 
@@ -106,9 +108,10 @@ int main(void) {
     GRAPH graph;
     LIST list;
     int vertex_create_iter, array_filler_iter;
+    int start_vertex = 0, end_vertex = 0;
     
+    menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
     while (more_dataset == TRUE) {
-        menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
         switch(menu_choice[0] - '0') {
             case 0:
                 row_iter = 0;
@@ -158,11 +161,35 @@ int main(void) {
                     graph.pred[array_filler_iter] = 0;
                     printf("at %d init to 0\t", array_filler_iter);
                  }
+                 
+                 //DFS driver
+                 
                 
             case 1:
                 printf("Enter a vertex pair (separate it by space): ");          
                 fgets(str_vertex_pair, string_size, stdin);
-                str_vertex_pair[strlen(str_vertex_pair) - 1] = '\0'; 
+                int str_vertex_pair_bounds = strlen(str_vertex_pair);
+                printf("bounds is %d\n", str_vertex_pair_bounds);
+                str_vertex_pair[str_vertex_pair_bounds - 1] = '\0'; 
+                int svp_iter;
+ 
+                for (svp_iter = 0; svp_iter < str_vertex_pair_bounds; svp_iter++) {
+                    if (str_vertex_pair[svp_iter] == ' ') {
+                        str_vertex_pair[svp_iter] = '\0';
+                        start_vertex = atoi(&str_vertex_pair[0]);
+                        //printf("sv %d\n", start_vertex);
+                        end_vertex = atoi(&str_vertex_pair[svp_iter + 1]);
+                        //printf("ev %d\n", end_vertex);
+                        break;
+                    }
+                }
+                if ((start_vertex != 0 && (start_vertex <= num_of_vertex) && (start_vertex >= 1)) &&
+                    (end_vertex != 0 && (end_vertex <= num_of_vertex) && (end_vertex >= 1))) {
+                    printf("doing the DFS");       
+                }
+                else {
+                    printf("Vertex pair invalid input\nPlease follow the format: d d where d is an integer within bounds\n");
+                }
                 break;
             
         }
