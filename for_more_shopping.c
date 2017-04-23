@@ -21,6 +21,7 @@ struct Node
 };
 
 typedef struct{
+    Node** node_list;
     int* pred;
     int* d;
     int* f;
@@ -79,39 +80,39 @@ printColorContent(int size){
     printf("i:%d have color[i]: %s\n", i, color[i]);
 }
 
-void DFS(GRAPH* graph, Node** node_list, int i) {
+void DFS(GRAPH* graph, Node** node_link, int i) {
     color[i - 1] = "gray";
     graph->d[i - 1] = time;
     time++;
     printf("i is %d\n", i);
-    Node* alpha = node_list[i - 1];
+    Node* alpha = node_link[i - 1];
     int j;
     while (alpha != NULL) {
         j = alpha->VRTX;
         printf("WOW color at %d\n", j);
         printf(" is %s", color[j - 1]);
-        /**
+        
         if (strcmp(color[j - 1], "white") == 0) {
             alpha->TYPE = 'T';
-            graph.pred[j - 1] = i;
-            DFS(graph, j);
+            graph->pred[j - 1] = i;
+            DFS(graph, node_link, j);
         }
         
         else if (strcmp(color[j - 1], "gray") == 0) {
-            if (graph.pred[i - 1] != j) {
+            if (graph->pred[i - 1] != j) {
                 alpha->TYPE = 'B';
             }
         }
             
         else if (strcmp(color[j - 1], "black") == 0) {
-            if (graph.d[i - 1] < graph.d[j - 1]) {
+            if (graph->d[i - 1] < graph->d[j - 1]) {
                 alpha->TYPE = 'F';
             }
             else {
                 alpha->TYPE = 'X';
             }
         }
-        */ 
+         
          alpha = alpha->NEXT;
     }
     color[i - 1] = "black";
@@ -161,21 +162,28 @@ int main(void) {
     GRAPH* graph = malloc(sizeof(GRAPH));
     int vertex_create_iter, array_filler_iter;
     int start_vertex = 0, end_vertex = 0;
+    graph->node_list = NULL;
     graph->pred = NULL;
     graph->d = NULL;
     graph->f = NULL;
     Node* node;
-    Node** node_list = NULL;
+    Node** node_link = NULL;
     menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
     while (more_dataset == TRUE) {
         switch(menu_choice[0] - '0') {
             case 0:
                 //freeing all the pointers used in constructing the graph
-                 if (node_list != NULL) {
+               
+                
+                 if (graph->node_list != NULL) {
                      for (vertex_create_iter = 1; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
-                        free(node_list[vertex_create_iter - 1]);
+                        free(graph->node_list[vertex_create_iter - 1]);
                      }
-                     free(node_list);   
+                     free(graph->node_list);   
+                }
+                
+                if  (node_link != NULL) {
+                    free(node_link);
                 }
             
                 if (graph->pred != NULL) {
@@ -217,15 +225,18 @@ int main(void) {
                     row_iter++;  
                 }
                 //constructing the graph
-                 node_list = malloc(sizeof(Node*) * sizeof(num_of_vertex));
+                 graph->node_list = malloc(sizeof(Node*) * sizeof(num_of_vertex));
+                 node_link = malloc(sizeof(Node*) * sizeof(num_of_vertex));
                  for (vertex_create_iter = 1; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
                     node = malloc(sizeof(Node));
                     node->VRTX = vertex_create_iter;
                     node->NEXT = NULL;
                     //printf("vertex %d created\t", node->VRTX);
-                    node_list[vertex_create_iter - 1] = node;
-                    printf("1 node vrtx is %d\n", node_list[vertex_create_iter - 1]->VRTX);
-                    //printf("node vrtx is %d\n", graph.node_list[vertex_create_iter - 1]->VRTX);
+                    
+                    node_link[vertex_create_iter - 1] = node;
+                    graph->node_list[vertex_create_iter - 1] = node;
+                    printf("1 node vrtx is %d\n", node_link[vertex_create_iter - 1]->VRTX);
+                    printf("node vrtx is %d\n", graph->node_list[vertex_create_iter - 1]->VRTX);
                  }
                  
                  
@@ -278,8 +289,8 @@ int main(void) {
                     
                     for(vertex_trav_iter = 1; vertex_trav_iter <= num_of_vertex; vertex_trav_iter++) {
                         if (strcmp(color[vertex_trav_iter - 1], "white") == 0) {
-                            printf("1 node vrtx is %d\n", node_list[vertex_trav_iter - 1]->VRTX);
-                            DFS(graph, node_list, vertex_trav_iter);
+                            printf("1 node vrtx is %d\n", node_link[vertex_trav_iter - 1]->VRTX);
+                            DFS(graph, node_link, vertex_trav_iter);
                         }
                     }
                     printf("pred content\n");
@@ -297,7 +308,7 @@ int main(void) {
         }
         
         //another choice of input mode
-
+            
         success_choice = FALSE;
         while (success_choice == FALSE) {
             menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
@@ -326,9 +337,10 @@ int main(void) {
      
      //freeing all the pointers used in constructing the graph
      for (vertex_create_iter = 1; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
-        free(node_list[vertex_create_iter - 1]);
+        free(graph->node_list[vertex_create_iter - 1]);
      }
-     free(node_list);
+     free(graph->node_list);
+     free(node_link);
      free(graph->pred);
      free(graph->d);
      free(graph->f);
