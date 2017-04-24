@@ -27,7 +27,7 @@ typedef struct{
     Node** node_list;
 }GRAPH; 
 
-//input helpers
+//input helper
 
 char* printMenuWithDataIter(char* menu_choice, int menuchoice_size) {
     printf("How would you like your input to be further processed?\n");
@@ -40,49 +40,7 @@ char* printMenuWithDataIter(char* menu_choice, int menuchoice_size) {
     return menu_choice;
 }
 
-char*** create3DArray(char* all_elems, char*** array3D, int x, int y, int z) {
-    int i, j, k;
-    for(i = 0; i < x; i++)
-    {
-        array3D[i] = malloc(y * sizeof(char *));
-        assert(array3D[i] != NULL);
-        for(j = 0; j < y; j++)
-        {
-            array3D[i][j] = all_elems + (i * y * z) + (j * z);
-        }
-    }
-    return array3D;
-
-}
-
-void print3DArray(char*** array3D, int num_of_vertex, int x) {
-    int i, j, k;
-    printf("costs are: \n")
-     for(i = 0; i < x; i++)
-    {
-        printf("%d\n", i);
-
-        for(j = 0; j < num_of_vertex; j++)
-        {
-            printf("\t%s", array3D[i][j]);
-          
-        }
-
-        printf("\n\n");
-    }
-}
-
-void free3DArray(char* all_elems, char*** array3D, int num_of_vertex) {
-    free(all_elems);
-    int i;
-    for(i = 0; i < num_of_vertex; i++)
-    {
-        free(array3D[i]);
-    }
-    free (array3D);
-}
-
-//cost matrix helpers
+//cost matrix helper
 
 int getNumOfVertex(char* cost_row) {
     int i, vertex_num = 1;
@@ -200,7 +158,7 @@ int main(void) {
     assert(menu_choice != NULL);
     int more_dataset = TRUE, line_iter, start_line_iter, space_iter, row_iter = 0, line_bounds;
     int** cost_adj_mat = NULL;
-    char*** str_cost_adj_mat = NULL;
+    char** str_cost_adj_mat = NULL;
     int num_of_vertex;//, str_cost_alloc_iter, cost_alloc_iter;
     
     //for the graph
@@ -213,9 +171,8 @@ int main(void) {
     graph->f = NULL;
     Node* node;
     
-    //for 3D matrix handling
-    int max_cost_str_length = 5;
-    char *all_elems = NULL;
+    //for str_cost_adj_mat helpers
+    int str_max_of_chars_for_num = 5, end_of_line_chars = 4;
     
     //for menu
     menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
@@ -226,18 +183,19 @@ int main(void) {
                 while (fgets(line, line_size, input_file) && strcmp(line, "end\n") != 0) {
                     if (row_iter == 0) {
                         num_of_vertex = getNumOfVertex(line);
-                        str_cost_adj_mat = realloc(str_cost_adj_mat, num_of_vertex * sizeof(char**));
-                        assert(str_cost_adj_mat != NULL);
-                        all_elems = realloc((num_of_vertex * num_of_vertex * max_cost_str_length) * sizeof(char));
-                        assert(all_elems != NULL);
-                        str_cost_adj_mat  = create3DArray(all_elems, str_cost_adj_mat, num_of_vertex, num_of_vertex, max_cost_str_length);
+                        str_cost_adj_mat = realloc(str_cost_adj_mat, num_of_vertex * sizeof(char*));
                         cost_adj_mat = realloc(cost_adj_mat, num_of_vertex * sizeof(int*));
+                        
                     }
+
                     space_iter = 0;
                     start_line_iter = 0;
                     //cost_adj_mat = realloc(cost_adj_mat, (row_iter + 1) * sizeof(int*));
                     //printf("string line is %s\n", line);
                     line_bounds = strlen(line);
+                    str_cost_adj_mat[row_iter] = realloc(str_cost_adj_mat[row_iter], (num_of_vertex * str_max_of_chars_for_num * sizeof(char)) + end_of_line_chars); 
+                    strncpy(str_cost_adj_mat[row_iter], line, line_bounds);
+                    printf("copy_of_input: %s\n", str_cost_adj_mat[row_iter]);
                     for (line_iter = 0; line_iter < line_bounds; line_iter++) {
                         if (line[line_iter] == ' ' || line[line_iter] == '\n') {
                             line[line_iter] = '\0';
@@ -249,12 +207,8 @@ int main(void) {
                         }
                     }
                     line[line_bounds - 1] = '\0';
-
-                    //str_cost_adj_mat[row_iter] = realloc(str_cost_adj_mat[row_iter], ((num_of_vertex * max_cost_str_length + end_of_line_chars) * sizeof(char))); //5 for the amount of characters given a 3 digit number and a space, + 4 for extra characters like '\n' and carriage return
-                    //str_cost_adj_mat[row_iter] = line;
                     row_iter++;  
                 }
-                print3DArray()
                 
                      //constructing the graph
                 /**
