@@ -16,6 +16,7 @@ typedef struct Node Node;
 struct Node
 {
     int VRTX;
+    int TRAVEL_COST;
     char TYPE;
     Node *NEXT;
 };
@@ -272,16 +273,33 @@ int main(void) {
                 
                 if ((start_vertex != 0 && (start_vertex <= num_of_vertex) && (start_vertex >= 1)) &&
                     (end_vertex != 0 && (end_vertex <= num_of_vertex) && (end_vertex >= 1))) {
+                                            
+                    int pred = 0, vertex_trav_iter, vertex_trav_iter2, color_iter;
                     
+                    //using the cost adjacency matrix to build up every element of node_list by appending adjacent vertex
+                    Node* rover;
+                    for (vertex_trav_iter = 1; vertex_trav_iter <= num_of_vertex; vertex_trav_iter++) {
+                        rover = graph->node_list[vertex_trav_iter];
+                       for (vertex_trav_iter2 = 1; vertex_trav_iter2 <= num_of_vertex; vertex_trav_iter2++) {
+                            if (cost_adj_mat[vertex_trav_iter - 1][vertex_trav_iter2 - 1] != 1000) {
+                                node = malloc(sizeof(Node));
+                                node->VRTX = vertex_trav_iter2;
+                                node->TRAVEL_COST = cost_adj_mat[vertex_trav_iter - 1][vertex_trav_iter2 - 1];
+                                rover->NEXT = node;
+                                rover = node;
+                                printf("start vertex: %d current_vertex: %d travel cost: %d\n", graph->node_list[vertex_trav_iter]->VRTX, node->VRTX, node->TRAVEL_COST);
+                            }
+                        } 
+                    }
+                    
+                    //DFS driver
                     if (color != NULL) {
                         free(color);
                     }
                     
                     color = malloc(sizeof(char*) * num_of_vertex);
-                    //DFS driver
-                    time = 0;
+                    time = 1;
                                    
-                    int pred = 0, vertex_trav_iter, color_iter;
                     for (color_iter = 0; color_iter < num_of_vertex; color_iter++) {
                         color[color_iter] = "white";
                     }
@@ -334,6 +352,12 @@ int main(void) {
     
     //freeing all the pointers used in constructing the graph
      for (vertex_create_iter = 0; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
+        Node* alpha = graph->node_list[vertex_create_iter]->NEXT;
+        while (alpha != NULL) {
+            Node* beta = alpha->NEXT;
+            free(alpha);
+            alpha = beta;
+        }
         free(graph->node_list[vertex_create_iter]);
      }
      free(graph->node_list);
