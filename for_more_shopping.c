@@ -19,11 +19,18 @@ struct Node
     char TYPE;
     Node *NEXT;
 };
+/**
+typedef struct {
+    int start;
+    int finish;
+    int explored;
+}Edge */
 
 typedef struct{
     int* pred;
     int* d;
     int* f;
+    //Edge* edge_list;
     Node** node_list;
 }GRAPH; 
 
@@ -154,6 +161,8 @@ int main(void) {
     //for menu choice
     int success_choice = FALSE, num_menu;
     char* line = malloc(sizeof(line_size)), *str_vertex_pair = malloc(sizeof(line_size));
+    assert(line != NULL);
+    assert(str_vertex_pair != NULL);
     char* menu_choice = malloc(sizeof(char) * menuchoice_size);
     assert(menu_choice != NULL);
     int more_dataset = TRUE, line_iter, start_line_iter, space_iter, row_iter = 0, line_bounds;
@@ -210,7 +219,7 @@ int main(void) {
                     row_iter++;  
                 }
                 
-                     //constructing the graph
+                //constructing the graph
                 /**
                  node = malloc(sizeof(Node));
                  graph->node_list = malloc(sizeof(Node*) * (sizeof(num_of_vertex) + 1));
@@ -237,8 +246,10 @@ int main(void) {
                     //printf("at %d init to 0\t", array_filler_iter);
                  }
                  
+                 //assigning cost to the graph edges
+                 
+                 
              case 1:
-                            
                 printf("Enter a vertex pair (separate it by space): ");          
                 fgets(str_vertex_pair, string_size, stdin);
                 int str_vertex_pair_bounds = strlen(str_vertex_pair);
@@ -257,12 +268,14 @@ int main(void) {
                     }
                 }
                 
-                if (color != NULL) {
-                    free(color);
-                }
+
                 
                 if ((start_vertex != 0 && (start_vertex <= num_of_vertex) && (start_vertex >= 1)) &&
                     (end_vertex != 0 && (end_vertex <= num_of_vertex) && (end_vertex >= 1))) {
+                    
+                    if (color != NULL) {
+                        free(color);
+                    }
                     
                     color = malloc(sizeof(char*) * num_of_vertex);
                     //DFS driver
@@ -321,7 +334,7 @@ int main(void) {
     
     //freeing all the pointers used in constructing the graph
      for (vertex_create_iter = 0; vertex_create_iter <= num_of_vertex; vertex_create_iter++) {
-        free(graph->node_list[vertex_create_iter - 1]);
+        free(graph->node_list[vertex_create_iter]);
      }
      free(graph->node_list);
      free(graph->pred);
