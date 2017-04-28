@@ -21,9 +21,8 @@ typedef struct Node Node;
 
 struct Node
 {
-    VRTX_OBJ vrtx_obj;
+    VRTX_OBJ* vrtx_obj;
     int VRTX;
-    int TRAVEL_COST;
     char TYPE;
     Node *NEXT;
 };
@@ -31,7 +30,8 @@ struct Node
 typedef struct {
     int start;
     int finish;
-}Edge
+    int TRAVEL_COST;
+}Edge;
 
 
 typedef struct{
@@ -96,7 +96,7 @@ printColorContent(int size){
     printf("i:%d have color[i]: %s\n", i, color[i]);
 }
 
-int DFS(GRAPH* graph, Edge** edge_list, int i, int start_vertex, int end_vertex) {
+int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, int* back_to_start_vertex, int travel_cost,  int start_vertex, int end_vertex) {
     color[i - 1] = "gray";
     graph->d[i - 1] = time;
     time++;
@@ -104,7 +104,6 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int start_vertex, int end_vertex)
     Node* alpha = graph->node_list[i];
     int j = alpha->VRTX;
     Edge* edge = malloc(sizeof(edge));
-
     int already_discovered = FALSE;
     while (alpha != NULL) {
         if (already_discovered == FALSE) {
@@ -116,10 +115,17 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int start_vertex, int end_vertex)
                 alpha->TYPE = 'T';
                 graph->pred[j - 1] = i;
                 edge->start = i;
-                edge->end = j;
-                edge_list[edge_trav_iter - 1] = edge; 
-                alpha->vrtx_obj->discovered = TRUE;
-                DFS(graph, j, start_vertex, end_vertex);
+                edge->finish = j;
+                edge_list[edge_trav_iter] = edge;
+                edge_trav_iter++;
+                if (alpha != NULL) {
+                    if (alpha->vrtx_obj == NULL) {
+                        printf("vrtx obj is null at vertex %d\n", alpha->VRTX);
+                    }
+                    else
+                    alpha->vrtx_obj->discovered = TRUE;
+                }
+                DFS(graph, edge_list, j, travelled_destination, travel_cost, start_vertex, end_vertex);
             }
             
             else if (strcmp(color[j - 1], "gray") == 0) {
@@ -136,25 +142,41 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int start_vertex, int end_vertex)
                     alpha->TYPE = 'X';
                 }
             }
+            
              //added implementation
              if (start_vertex != end_vertex && j == end_vertex) {
+                 /**
                 color[i - 1] = "black";
                 printf("vertex %d\n is now black\n", i);
                 graph->f[i - 1] = time;
-                time++;
-                return TRUE;
+                time++; */
+                *travelled_destination = TRUE;
+                break;
+                //return 0;
              }
              //end
         }
         alpha = alpha->NEXT;
-        already_discovered = alpha->vrtx_obj->discovered;
+        if (alpha != NULL) {
+            if (alpha->vrtx_obj != NULL) {
+                already_discovered = alpha->vrtx_obj->discovered; 
+            }
+        }
+
     }
     color[i - 1] = "black";
-    alpha->vrtx_obj->discovered = FALSE;
+    if (alpha != NULL) {
+        if (alpha->vrtx_obj != NULL) {
+            alpha->vrtx_obj->discovered = FALSE;
+        }        
+    }
+    if (i == start_vertex) {
+        *back_to_start_vertex = TRUE;
+    }
     printf("vertex %d\n is now black\n", i);
     graph->f[i - 1] = time;
     time++;
-    return TRUE;
+    return travel_cost;
 }
 
 int main(void) {
@@ -206,10 +228,10 @@ int main(void) {
     graph->d = NULL;
     graph->f = NULL;
     Node* node;
-    VRTX*_OBJ vrtx_obj;
+    VRTX_OBJ* vrtx_obj;
+    Edge** edge_list = NULL;
     //for str_cost_adj_mat helpers
     int str_max_of_chars_for_num = 5, end_of_line_chars = 4;
-    
     //for menu
     menu_choice = printMenuWithDataIter(menu_choice, menuchoice_size);
     while (more_dataset == TRUE) {
@@ -332,18 +354,28 @@ int main(void) {
                     for (color_iter = 0; color_iter < num_of_vertex; color_iter++) {
                         color[color_iter] = "white";
                     }
-                    edge_trav_iter = 1;
-                    Edge** edge_list = malloc(2 * sizeof(Edge*));
-                    int found_one = FALSE;
-                    found_one = DFS(graph, edge_list, start_vertex, start_vertex, end_vertex);
+                    edge_trav_iter = 0;
+                    if (edge_list  != NULL) {
+                        free(edge_list);
+                    }
+                    edge_list = malloc(2 * num_of_vertex * sizeof(Edge*));
+                    int travelled_destination = FALSE, travel_cost = 0;
+                    DFS(graph, edge_list, start_vertex, &travelled_destination, travel_cost, start_vertex, end_vertex);
                     
-                    if (found_one == TRUE) {
-                        printf("There is a longest path and it is");
+                    if (travelled_destination == TRUE) {
+                        printf("With %d edges There is a longest path and it is ", edge_trav_iter);
                         int edge_iter;
-                        for (edge_iter = 0; edge_iter < edge_trav_iter; edge_iter++) {
-                            printf("start: %d - end: %d\n", edge_list[edge_iter]->start, edge_list[edge_iter]->end);
-                        }
                         
+                        for (edge_iter = 0; edge_iter < edge_trav_iter; edge_iter++) {
+                            if (edge_list[edge_iter] != NULL) {
+                                printf("%d ", edge_list[edge_iter]->start);    
+                            }
+                            
+                        }
+                        if (edge_list[edge_iter - 1] != NULL) {
+                            printf("%d\n", edge_list[1]->finish);
+                    
+                        }        
                     }
                     
                     else {
@@ -403,7 +435,7 @@ int main(void) {
      free(graph->pred);
      free(graph->d);
      free(graph->f);
-     free(edge_list);         
+             
      //freeing all the other used pointers
      freeStrCostAdjMat(str_cost_adj_mat, num_of_vertex);
      free(str_cost_adj_mat);
