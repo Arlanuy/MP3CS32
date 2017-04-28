@@ -107,34 +107,49 @@ Travel_Stats* copyOfTravelStats(Travel_Stats* travel_stats, int num_of_vertex) {
     Travel_Stats* new_travel_stats = malloc(sizeof(Travel_Stats));
     new_travel_stats->edge_trav_iter = travel_stats->edge_trav_iter;
     new_travel_stats->edge_list = malloc((num_of_vertex * num_of_vertex) * sizeof(Edge*));
+    new_travel_stats->pred = malloc(num_of_vertex * sizeof(int));
+    new_travel_stats->d = malloc(num_of_vertex * sizeof(int));
+    new_travel_stats->f = malloc(num_of_vertex * sizeof(int));
     int i;
     for(i = 0; i < travel_stats->edge_trav_iter ; i++) {
         new_travel_stats->edge_list[i] = travel_stats->edge_list[i];
+    }
+    
+    for (i = 0; i < num_of_vertex; i++) {
+        new_travel_stats->pred[i] = travel_stats->pred[i];
+        new_travel_stats->d[i] = travel_stats->d[i];
+        new_travel_stats->f[i] = travel_stats->f[i];
     }
     new_travel_stats->edge_trav_iter = travel_stats->edge_trav_iter;
     new_travel_stats->TOTAL_TRAVEL_COST = travel_stats->TOTAL_TRAVEL_COST;
     return new_travel_stats;
 }
 
-void printTravelStatsContent(Travel_Stats* travel_stats) {
+void printTravelStatsContent(Travel_Stats* travel_stats, int num_of_vertex) {
     printf("A path consists of edges\n");
     int i;
     for (i = 0; i < travel_stats->edge_trav_iter; i++) {
         printf("%d-%d with cost: %d\n", travel_stats->edge_list[i]->start, travel_stats->edge_list[i]->finish, travel_stats->edge_list[i]->TRAVEL_COST);
     }
     printf("with total cost %d\n", travel_stats->TOTAL_TRAVEL_COST);
+    printf("pred content\n");
+    printArrContent(travel_stats->pred, num_of_vertex);
+    printf("d content\n");
+    printArrContent(travel_stats->d, num_of_vertex);
+    printf("f content\n");
+    printArrContent(travel_stats->f, num_of_vertex);
 }
 
 void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Travel_Stats* travel_stats, Travel_Stats** all_travel_stats, int start_vertex, int end_vertex) {
     color[i - 1] = "gray";
-    graph->d[i - 1] = time;
+    travel_stats->d[i - 1] = time;
     time++;
     //printf("i is %d\n", i);
-    Node* alpha = graph->node_list[i];
+    Node* alpha = graph->node_list[i], *prev_alpha;
     int j = alpha->VRTX;
     Edge* edge = malloc(sizeof(edge));
     int already_discovered = FALSE;
-    Travel_Stats* current_travel_stats = travel_stats;
+    Travel_Stats* current_travel_stats = travel_stats, *current2_travel_stats = travel_stats;
     if (i == start_vertex) {
         if (alpha->vrtx_obj != NULL) {
             alpha->vrtx_obj->discovered = FALSE;
@@ -150,6 +165,7 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
         travel_stats_iter++;
     }*/
     while (alpha != NULL) {
+        current_travel_stats = current2_travel_stats;
         if (already_discovered == FALSE) {
             j = alpha->VRTX;
             printf("WOW color at %d", j);
@@ -157,13 +173,13 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
             
             if (strcmp(color[j - 1], "white") == 0) {
                 alpha->TYPE = 'T';
-                graph->pred[j - 1] = i;
+                travel_stats->pred[j - 1] = i;
                 edge->start = i;
                 edge->finish = j;
                 edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
                 travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
                 travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
-                (travel_stats->edge_trav_iter)++;
+                (travel_stats->edge_trav_iter)++; 
                 if (alpha != NULL) {
                     if (alpha->vrtx_obj != NULL) {
                         alpha->vrtx_obj->discovered = TRUE;
@@ -172,20 +188,7 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
                 DFS(graph, edge_list, j, travelled_destination, current_travel_stats, all_travel_stats, start_vertex, end_vertex);
             }
             
-            else if (strcmp(color[j - 1], "gray") == 0) {
-                if (graph->pred[i - 1] != j) {
-                    alpha->TYPE = 'B';
-                }
-            }
-                
-            else if (strcmp(color[j - 1], "black") == 0) {
-                if (graph->d[i - 1] < graph->d[j - 1]) {
-                    alpha->TYPE = 'F';
-                }
-                else {
-                    alpha->TYPE = 'X';
-                }
-            }
+           
             
              //added implementation
              if (start_vertex != end_vertex && j == end_vertex) {
@@ -199,10 +202,7 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
                     if (alpha->vrtx_obj != NULL) {
                         alpha->vrtx_obj->discovered = FALSE;
                     }
-                    current_travel_stats = copyOfTravelStats(travel_stats, graph->num_of_vertex);
-                    printTravelStatsContent(current_travel_stats);
-                    all_travel_stats[travel_stats_iter] = current_travel_stats;
-                    travel_stats_iter++;
+                    
                 }
                 break;
                 //return travel_stats;
@@ -210,7 +210,32 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
              }
              //end
         }
+        
+        else {
+           if (strcmp(color[j - 1], "gray") == 0) {
+                if (travel_stats->pred[i - 1] != j) {
+                    alpha->TYPE = 'B';
+                }
+            }
+                
+            else if (strcmp(color[j - 1], "black") == 0) {
+                if (travel_stats->d[i - 1] < travel_stats->d[j - 1]) {
+                    alpha->TYPE = 'F';
+                }
+                else {
+                    alpha->TYPE = 'X';
+                }
+                if (alpha != NULL) {
+                    if (alpha->vrtx_obj != NULL) {
+                        printf("undiscovered vertex %d\n", alpha->vrtx_obj->VRTX);
+                        alpha->vrtx_obj->discovered = FALSE;
+                    }
+                    
+                }
+            } 
+        }
         alpha = alpha->NEXT;
+        
         if (alpha != NULL) {
             if (alpha->vrtx_obj != NULL) {
                 already_discovered = alpha->vrtx_obj->discovered; 
@@ -221,11 +246,16 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
     color[i - 1] = "black";
     if (alpha != NULL) {
         if (alpha->vrtx_obj != NULL) {
+            printf("YOLO everyday\n");
             alpha->vrtx_obj->discovered = FALSE;
+            current2_travel_stats = copyOfTravelStats(current_travel_stats, graph->num_of_vertex);
+            printTravelStatsContent(current_travel_stats, graph->num_of_vertex);
+            all_travel_stats[travel_stats_iter] = current2_travel_stats;
+            travel_stats_iter++;
         }        
     }
     printf("vertex %d\n is now black\n", i);
-    graph->f[i - 1] = time;
+    travel_stats->f[i - 1] = time;
     time++;
 }
 
@@ -274,9 +304,6 @@ int main(void) {
     int vertex_create_iter, array_filler_iter;
     int start_vertex = 0, end_vertex = 0;
     graph->node_list = NULL;
-    graph->pred = NULL;
-    graph->d = NULL;
-    graph->f = NULL;
     Node* node;
     VRTX_OBJ* vrtx_obj;
     Edge** edge_list = NULL;
@@ -337,18 +364,8 @@ int main(void) {
                  }
                  printf("1.5 node vrtx is %d with pointer %p\n", graph->node_list[1]->VRTX, graph->node_list[1]);
 
-                 
-                 graph->pred = malloc(sizeof(int) * num_of_vertex);
-                 graph->d = malloc(sizeof(int) * num_of_vertex);
-                 graph->f = malloc(sizeof(int) * num_of_vertex);
-                 
-                 for(array_filler_iter = 0; array_filler_iter < num_of_vertex; array_filler_iter++) {
-                    graph->pred[array_filler_iter] = 0;
-                    //printf("at %d init to 0\t", array_filler_iter);
-                 }
-                 
-                 //assigning cost to the graph edges
-                 
+ 
+                
                  
              case 1:
                 printf("Enter a vertex pair (separate it by space): ");          
@@ -414,15 +431,28 @@ int main(void) {
                     
                     int travelled_destination = FALSE, back_to_start_vertex = FALSE, travel_cost = 0, max_travel_cost = 0, max_edge_trav_iter;
                     Edge** max_travelled_edge_list;
+                     
                     Travel_Stats* travel_stats = malloc(sizeof(Travel_Stats));
                     travel_stats->edge_list = malloc(num_of_vertex * num_of_vertex * sizeof(Edge*));
                     travel_stats->edge_trav_iter = 0;
                     travel_stats->TOTAL_TRAVEL_COST = 0;
+                    
+                    travel_stats->pred = malloc(num_of_vertex * sizeof(int));
+                    travel_stats->d = malloc(num_of_vertex * sizeof(int));
+                    travel_stats->f = malloc(num_of_vertex * sizeof(int));
+                    
+                    /**
+                    for(array_filler_iter = 0; array_filler_iter < num_of_vertex; array_filler_iter++) {
+                        graph->pred[array_filler_iter] = 0;
+                        //printf("at %d init to 0\t", array_filler_iter);
+                     }*/
+                    
                     travel_stats_iter = 0;
                     graph->num_of_vertex = num_of_vertex;
                     Travel_Stats** all_travel_stats;
                     all_travel_stats = malloc(100 * sizeof(Travel_Stats*));
                     //all_travel_stats[travel_stats_iter] =
+                    
                     DFS(graph, edge_list, start_vertex, &travelled_destination, travel_stats, all_travel_stats, start_vertex, end_vertex);
                     //travel_stats_iter++;
                     //finding the maximum travel path
@@ -434,6 +464,7 @@ int main(void) {
                             max_travel_cost = all_travel_stats[temp_travel_stats_iter]->TOTAL_TRAVEL_COST;
                             max_travelled_edge_list = all_travel_stats[temp_travel_stats_iter]->edge_list;
                             max_edge_trav_iter = all_travel_stats[temp_travel_stats_iter]->edge_trav_iter;
+                        
                         }                    
                     }
                     if (travelled_destination == TRUE) {
@@ -455,12 +486,7 @@ int main(void) {
                         printf("There is no longest path");
                     }
                             
-                    printf("pred content\n");
-                    printArrContent(graph->pred, num_of_vertex);
-                    printf("d content\n");
-                    printArrContent(graph->d, num_of_vertex);
-                    printf("f content\n");
-                    printArrContent(graph->f, num_of_vertex);
+                    
                 }
                 else {
                     printf("Vertex pair invalid input\nPlease follow the format: d d where d is an integer within bounds\n");
@@ -506,9 +532,10 @@ int main(void) {
         free(graph->node_list[vertex_create_iter]);
      }
      free(graph->node_list);
+     /**
      free(graph->pred);
      free(graph->d);
-     free(graph->f);
+     free(graph->f);*/
              
      //freeing all the other used pointers
      freeStrCostAdjMat(str_cost_adj_mat, num_of_vertex);
