@@ -153,7 +153,9 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trave
     
     if (i == start_vertex) {
         if (alpha->vrtx_obj != NULL) {
-            alpha->vrtx_obj->discovered = TRUE;
+            if (start_vertex != end_vertex) {
+                alpha->vrtx_obj->discovered = TRUE;    
+            }
         }
     }
     /**
@@ -244,24 +246,41 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trave
              //added implementation
              if (j == end_vertex) {
                  if (start_vertex == end_vertex) {
-                     /**
-                    color[i - 1] = "black";
-                    printf("vertex %d\n is now black\n", i);
-                    graph->f[i - 1] = time;
-                    time++; */
-                    travel_stats->pred[j - 1] = i;
-                    edge->start = i;
-                    edge->finish = j;
-                    edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
-                    travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
-                    travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
-                    (travel_stats->edge_trav_iter)++; 
+                     if (travel_stats->edge_trav_iter > 0) {
+                         /** 
+                        color[i - 1] = "black";
+                        printf("vertex %d\n is now black\n", i);
+                        graph->f[i - 1] = time;
+                        time++;*/ 
+                        
+                        travel_stats->pred[j - 1] = i;
+                        
+                        edge->start = i;
+                        edge->finish = j;
+                        edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
+                        travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                        travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
+                        (travel_stats->edge_trav_iter)++; 
+                        *travelled_destination = TRUE;
+                     }
+                     
+                     else {
+                        if (alpha != NULL) {
+                            if (alpha->vrtx_obj != NULL) {
+                                alpha->vrtx_obj->discovered = FALSE;
+                                printf("kulay ng puti dito\n");
+                                color[j - 1] = "white"; 
+                                //color[j - 1] = "black";
+                            }
+                        } 
+                     }
+                   
                     
                     //return travel_stats;
                     //return 0;
                 }
                 
-                else {
+                else if (start_vertex != end_vertex) {
                     *travelled_destination = TRUE;
                     //should be removed
                     travel_stats->pred[j - 1] = i;
@@ -271,16 +290,17 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trave
                     travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
                     travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
                     (travel_stats->edge_trav_iter)++; 
-                } 
-                if (alpha != NULL) {
-                    if (alpha->vrtx_obj != NULL) {
-                        alpha->vrtx_obj->discovered = FALSE;
-                        printf("kulay ng puti dito\n");
-                        color[j - 1] = "white"; 
-                        //color[j - 1] = "black";
+                    if (alpha != NULL) {
+                        if (alpha->vrtx_obj != NULL) {
+                            alpha->vrtx_obj->discovered = FALSE;
+                            printf("kulay ng puti dito\n");
+                            color[j - 1] = "white"; 
+                            //color[j - 1] = "black";
+                        }
+                        return 0;  
                     }
-                    return 0;  
-                }
+                } 
+                
 
                 //alpha = alpha->NEXT;
                 //continue;
@@ -545,19 +565,24 @@ int main(void) {
                     for (temp_travel_stats_iter = 0; temp_travel_stats_iter < travel_stats_iter; temp_travel_stats_iter++) {
                         if (all_travel_stats[temp_travel_stats_iter] != NULL && all_travel_stats[temp_travel_stats_iter]->TOTAL_TRAVEL_COST > max_travel_cost) {
                             printf("i is %d\n", temp_travel_stats_iter);
-                            max_travel_cost = all_travel_stats[temp_travel_stats_iter]->TOTAL_TRAVEL_COST;
-                            max_travelled_edge_list = all_travel_stats[temp_travel_stats_iter]->edge_list;
-                            max_edge_trav_iter = all_travel_stats[temp_travel_stats_iter]->edge_trav_iter;
+                            if (end_vertex == all_travel_stats[temp_travel_stats_iter]->edge_list[all_travel_stats[temp_travel_stats_iter]->edge_trav_iter - 1]->finish) {
+                                max_travel_cost = all_travel_stats[temp_travel_stats_iter]->TOTAL_TRAVEL_COST;
+                                max_travelled_edge_list = all_travel_stats[temp_travel_stats_iter]->edge_list;
+                                max_edge_trav_iter = all_travel_stats[temp_travel_stats_iter]->edge_trav_iter;  
+                            }
+
                         
                         }                    
                     }
                     if (travelled_destination == TRUE) {
-                        printf("With %d edges There is a longest path and it is ", max_edge_trav_iter);
+                        printf("With %d edges and total cost %d There is a longest path and it is ", max_edge_trav_iter, max_travel_cost);
                         int edge_iter;
                         
                         for (edge_iter = 0; edge_iter < max_edge_trav_iter; edge_iter++) {
                             if (max_travelled_edge_list[edge_iter] != NULL) {
-                                printf("%d ", max_travelled_edge_list[edge_iter]->start);    
+                                if (max_travelled_edge_list[edge_iter]->start != max_travelled_edge_list[edge_iter]->finish) {
+                                    printf("%d-%d ", max_travelled_edge_list[edge_iter]->start, max_travelled_edge_list[edge_iter]->finish);   
+                                }
                             }
                             
                         }
