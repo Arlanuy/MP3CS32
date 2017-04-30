@@ -246,21 +246,21 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trave
              //added implementation
              if (j == end_vertex) {
                  if (start_vertex == end_vertex) {
-                     if (travel_stats->edge_trav_iter > 0) {
+                     if (current_travel_stats->edge_trav_iter > 0) {
                          /** 
                         color[i - 1] = "black";
                         printf("vertex %d\n is now black\n", i);
                         graph->f[i - 1] = time;
                         time++;*/ 
                         
-                        travel_stats->pred[j - 1] = i;
+                        current_travel_stats->pred[j - 1] = i;
                         
                         edge->start = i;
                         edge->finish = j;
                         edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
-                        travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
-                        travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
-                        (travel_stats->edge_trav_iter)++; 
+                        current_travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                        current_travel_stats->edge_list[current_travel_stats->edge_trav_iter] = edge;
+                        (current_travel_stats->edge_trav_iter)++; 
                         *travelled_destination = TRUE;
                      }
                      
@@ -283,13 +283,13 @@ int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trave
                 else if (start_vertex != end_vertex) {
                     *travelled_destination = TRUE;
                     //should be removed
-                    travel_stats->pred[j - 1] = i;
+                    current_travel_stats->pred[j - 1] = i;
                     edge->start = i;
                     edge->finish = j;
                     edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
-                    travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
-                    travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
-                    (travel_stats->edge_trav_iter)++; 
+                    current_travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                    current_travel_stats->edge_list[current_travel_stats->edge_trav_iter] = edge;
+                    (current_travel_stats->edge_trav_iter)++; 
                     if (alpha != NULL) {
                         if (alpha->vrtx_obj != NULL) {
                             alpha->vrtx_obj->discovered = FALSE;
