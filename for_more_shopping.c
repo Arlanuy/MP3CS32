@@ -140,19 +140,20 @@ void printTravelStatsContent(Travel_Stats* travel_stats, int num_of_vertex) {
     printArrContent(travel_stats->f, num_of_vertex);
 }
 
-void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Travel_Stats* travel_stats, Travel_Stats** all_travel_stats, int start_vertex, int end_vertex) {
+int DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Travel_Stats* travel_stats, Travel_Stats** all_travel_stats, int start_vertex, int end_vertex) {
     color[i - 1] = "gray";
     travel_stats->d[i - 1] = time;
     time++;
     //printf("i is %d\n", i);
-    Node* alpha = graph->node_list[i], *prev_alpha;
+    Node* alpha = graph->node_list[i], *prev_alpha = NULL;
     int j = alpha->VRTX;
     Edge* edge = malloc(sizeof(edge));
     int already_discovered = FALSE;
     Travel_Stats* current_travel_stats = travel_stats, *current2_travel_stats = travel_stats;
+    
     if (i == start_vertex) {
         if (alpha->vrtx_obj != NULL) {
-            alpha->vrtx_obj->discovered = FALSE;
+            alpha->vrtx_obj->discovered = TRUE;
         }
     }
     /**
@@ -165,57 +166,61 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
         travel_stats_iter++;
     }*/
     while (alpha != NULL) {
-        current_travel_stats = current2_travel_stats;
         if (already_discovered == FALSE) {
             j = alpha->VRTX;
             printf("WOW color at %d", j);
             printf(" is %s\n", color[j - 1]);
-            
+
             if (strcmp(color[j - 1], "white") == 0) {
                 alpha->TYPE = 'T';
-                travel_stats->pred[j - 1] = i;
+                current_travel_stats->pred[j - 1] = i;
                 edge->start = i;
                 edge->finish = j;
+                printf("an edge of start: %d and finish: %d is created\n", edge->start, edge->finish);
                 edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
-                travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
-                travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
-                (travel_stats->edge_trav_iter)++; 
-                if (alpha != NULL) {
-                    if (alpha->vrtx_obj != NULL) {
-                        alpha->vrtx_obj->discovered = TRUE;
-                    }
+                current_travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                current_travel_stats->edge_list[current_travel_stats->edge_trav_iter] = edge;
+                (current_travel_stats->edge_trav_iter)++;
+                
+                printTravelStatsContent(current_travel_stats, graph->num_of_vertex);
+                
+                all_travel_stats[travel_stats_iter] = current_travel_stats;
+                travel_stats_iter++;
+                printTravelStatsContent(current_travel_stats, graph->num_of_vertex);
+                if (alpha->vrtx_obj != NULL) {
+                    alpha->vrtx_obj->discovered = TRUE;
                 }
-                DFS(graph, edge_list, j, travelled_destination, current_travel_stats, all_travel_stats, start_vertex, end_vertex);
+                DFS(graph, edge_list, j, travelled_destination, current_travel_stats, all_travel_stats, start_vertex, end_vertex);    
+                /**
+                if (j != end_vertex) {
+                    DFS(graph, edge_list, j, travelled_destination, current_travel_stats, all_travel_stats, start_vertex, end_vertex);    
+                }
+                
+                else {
+                     alpha = alpha->NEXT;
+        
+                    if (alpha != NULL) {
+                        printf("magaantay ako\n");
+                        if (alpha->vrtx_obj != NULL) {
+                            already_discovered = alpha->vrtx_obj->discovered;
+                            printf("vertex %d is already discovered is %d and with color %s\n",alpha->VRTX, already_discovered, color[alpha->VRTX - 1]);
+                        }
+                        current2_travel_stats = copyOfTravelStats(travel_stats, graph->num_of_vertex);
+                        current_travel_stats = current2_travel_stats;
+                        printTravelStatsContent(travel_stats, graph->num_of_vertex);
+                        all_travel_stats[travel_stats_iter] = current2_travel_stats;//can be removed
+                        travel_stats_iter++;//can be removed
+                    }
+                }*/
+                
             }
             
-           
-            
-             //added implementation
-             if (start_vertex != end_vertex && j == end_vertex) {
-                 /**
-                color[i - 1] = "black";
-                printf("vertex %d\n is now black\n", i);
-                graph->f[i - 1] = time;
-                time++; */
-                *travelled_destination = TRUE;
-                if (alpha != NULL) {
-                    if (alpha->vrtx_obj != NULL) {
-                        alpha->vrtx_obj->discovered = FALSE;
-                    }
-                    
-                }
-                break;
-                //return travel_stats;
-                //return 0;
-             }
-             //end
-        }
-        
-        else {
-           if (strcmp(color[j - 1], "gray") == 0) {
+            else if (strcmp(color[j - 1], "gray") == 0) {
+                printf("dumaan dito na may kulay na %s\n", color[j - 1]);
                 if (travel_stats->pred[i - 1] != j) {
                     alpha->TYPE = 'B';
                 }
+                //return 0;
             }
                 
             else if (strcmp(color[j - 1], "black") == 0) {
@@ -229,21 +234,95 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
                     if (alpha->vrtx_obj != NULL) {
                         printf("undiscovered vertex %d\n", alpha->vrtx_obj->VRTX);
                         alpha->vrtx_obj->discovered = FALSE;
+                        color[j - 1] = "white";
                     }
                     
                 }
             } 
+            
+             
+             //added implementation
+             if (j == end_vertex) {
+                 if (start_vertex == end_vertex) {
+                     /**
+                    color[i - 1] = "black";
+                    printf("vertex %d\n is now black\n", i);
+                    graph->f[i - 1] = time;
+                    time++; */
+                    travel_stats->pred[j - 1] = i;
+                    edge->start = i;
+                    edge->finish = j;
+                    edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
+                    travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                    travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
+                    (travel_stats->edge_trav_iter)++; 
+                    
+                    //return travel_stats;
+                    //return 0;
+                }
+                
+                else {
+                    *travelled_destination = TRUE;
+                    //should be removed
+                    travel_stats->pred[j - 1] = i;
+                    edge->start = i;
+                    edge->finish = j;
+                    edge->TRAVEL_COST = edge_list[(i - 1) * (graph->num_of_vertex) + (j - 1)]->TRAVEL_COST;
+                    travel_stats->TOTAL_TRAVEL_COST += edge->TRAVEL_COST;
+                    travel_stats->edge_list[travel_stats->edge_trav_iter] = edge;
+                    (travel_stats->edge_trav_iter)++; 
+                } 
+                if (alpha != NULL) {
+                    if (alpha->vrtx_obj != NULL) {
+                        alpha->vrtx_obj->discovered = FALSE;
+                        printf("kulay ng puti dito\n");
+                        color[j - 1] = "white"; 
+                        //color[j - 1] = "black";
+                    }
+                    return 0;  
+                }
+
+                //alpha = alpha->NEXT;
+                //continue;
+                //break;
+                //end
+            }
+             
         }
-        alpha = alpha->NEXT;
+        /**
+        else {
+            
+        } */
+        prev_alpha = alpha;
+                   
+
+        
         
         if (alpha != NULL) {
-            if (alpha->vrtx_obj != NULL) {
-                already_discovered = alpha->vrtx_obj->discovered; 
+            alpha = alpha->NEXT;
+            printf("magaantay ako\n");
+            if (alpha != NULL && alpha->vrtx_obj != NULL) {
+                already_discovered = alpha->vrtx_obj->discovered;
+                printf("vertex %d is already discovered is %d and with color %s\n",alpha->VRTX, already_discovered, color[alpha->VRTX - 1]);
             }
+            current2_travel_stats = copyOfTravelStats(travel_stats, graph->num_of_vertex);
+            current_travel_stats = current2_travel_stats;
+            printTravelStatsContent(travel_stats, graph->num_of_vertex);
+            all_travel_stats[travel_stats_iter] = current2_travel_stats;//can be removed
+            travel_stats_iter++;//can be removed
         }
+        
 
     }
     color[i - 1] = "black";
+    if (prev_alpha != NULL) {
+        if (prev_alpha->vrtx_obj != NULL) {
+            printf("prev vrtx is %d\n", prev_alpha->vrtx_obj->VRTX);
+            prev_alpha->vrtx_obj->discovered = FALSE;
+            color[prev_alpha->VRTX - 1] = "white";
+        }
+    }
+    /**
     if (alpha != NULL) {
         if (alpha->vrtx_obj != NULL) {
             printf("YOLO everyday\n");
@@ -253,10 +332,11 @@ void DFS(GRAPH* graph, Edge** edge_list, int i, int* travelled_destination, Trav
             all_travel_stats[travel_stats_iter] = current2_travel_stats;
             travel_stats_iter++;
         }        
-    }
+    } */
     printf("vertex %d\n is now black\n", i);
     travel_stats->f[i - 1] = time;
     time++;
+    return 0;
 }
 
 int main(void) {
@@ -362,7 +442,7 @@ int main(void) {
                     graph->node_list[vertex_create_iter] = node;
                     //printf("vti: %d\tnode vrtx is %d\n with pointer %p\n", vertex_create_iter, graph->node_list[vertex_create_iter]->VRTX, graph->node_list[vertex_create_iter]);
                  }
-                 printf("1.5 node vrtx is %d with pointer %p\n", graph->node_list[1]->VRTX, graph->node_list[1]);
+                 printf("1.5 node vrtx is %d with pointer %p and obj pointer %p\n", graph->node_list[1]->VRTX, graph->node_list[1], graph->node_list[1]->vrtx_obj);
 
  
                 
@@ -402,9 +482,13 @@ int main(void) {
                     for (vertex_trav_iter = 1; vertex_trav_iter <= num_of_vertex; vertex_trav_iter++) {
                         rover = graph->node_list[vertex_trav_iter];
                        for (vertex_trav_iter2 = 1; vertex_trav_iter2 <= num_of_vertex; vertex_trav_iter2++) {
-                            if (cost_adj_mat[vertex_trav_iter - 1][vertex_trav_iter2 - 1] != 1000) {
+                            if (cost_adj_mat[vertex_trav_iter - 1][vertex_trav_iter2 - 1] != 1000 && cost_adj_mat[vertex_trav_iter - 1][vertex_trav_iter2 - 1] != 0) {
                                 node = malloc(sizeof(Node));
                                 node->VRTX = vertex_trav_iter2;
+                                vrtx_obj = malloc(sizeof(VRTX_OBJ));
+                                vrtx_obj->VRTX = vertex_trav_iter2;
+                                vrtx_obj->discovered = FALSE;
+                                node->vrtx_obj = vrtx_obj;
                                 rover->NEXT = node;
                                 rover = node;
                                 printf("start vertex: %d current_vertex: %d\n", graph->node_list[vertex_trav_iter]->VRTX, node->VRTX);
